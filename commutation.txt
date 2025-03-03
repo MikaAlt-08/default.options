@@ -1,0 +1,65 @@
+ip link add link enp7s1 name enp7s1.330 type vlan id 330
+ip link set dev enp7s1.330 up
+ip addr add 192.168.11.82/29 dev enp7s1.330
+ip route add 0.0.0.0/0 via 192.168.11.81
+echo "nameserver 77.88.8.8" > /etc/resolv.conf
+
+apt-get update && apt-get install -y openvswitch
+
+systemctl enable --now openvswitch
+
+reboot
+
+mkdir /etc/net/ifaces/enp7s{2,3}
+
+cat <<EOF > /etc/net/ifaces/enp7s2/options
+  TYPE=eth
+  BOOTPROTO=static
+EOF
+
+cp /etc/net/ifaces/enp7s2/options /etc/net/ifaces/enp7s3/
+
+sed -i "s/BOOTPROTO=dhcp/BOOTPROTO=static/g" /etc/net/ifaces/enp7s1/options
+
+systemctl restart network
+
+ovs-vsctl add-br SW1-HQ
+
+mkdir /etc/net/ifaces/MGMT
+
+vim /etc/net/ifaces/MGMT/options
+TYPE=ovsport
+BOOTPROTO=static
+CONFIG_IPV4=yes
+BRIDGE=SW1-HQ
+VID=330
+
+echo "192.168.11.82/29" > /etc/net/ifaces/MGMT/ipv4address
+
+echo "default via 192.168.11.81" > /etc/net/ifaces/MGMT/ipv4route
+
+sed -i "s/OVS_REMOVE=yes/OVS_REMOVE=no/g" /etc/net/ifaces/default/options
+
+systemctl restart network
+
+ovs-vsctl add-port SW1-HQ enp7s1 trunk=110,220,330
+ovs-vsctl add-port SW1-HQ enp7s2 trunk=110,220,330
+ovs-vsctl add-port SW1-HQ enp7s3 trunk=110,220,330
+
+modprobe 8021q
+
+echo "8021q" | tee -a /etc/modules
+
+commands for check: ovs-vsctl show, lsmod | grep "8021q"
+
+SW1-HQ:
+ovs-vsctl set bridge SW1-HQ stp_enable=true
+ovs−vsctl set bridge SW1-HQ other_config:stp-priority=16384
+
+SW2-HQ:
+ovs-vsctl set bridge SW2-HQ stp_enable=true
+ovs−vsctl set bridge SW2-HQ other_config:stp-priority=24576
+
+SW3-HQ:
+ovs-vsctl set bridge SW3-HQ stp_enable=true
+ovs−vsctl set bridge SW3-HQ other_config:stp-priority=28672

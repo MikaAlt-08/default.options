@@ -1,0 +1,79 @@
+SRV1-HQ:
+echo "nameserver 77.88.8.8" > /etc/resolv.conf
+
+apt-get update && apt-get install -y bind bind-utils
+
+vim /etc/bind/options.conf
+listen-on { 127.0.0.1; 192.168.11.66; };
+listen-on-v6 { any; };
+
+forwarders { 77.88.8.8; };
+
+allow-query { 192.168.11.0/24; 192.168.33.0/24; };
+allow-transfer { 192.168.33.66; };
+
+systemctl enable --now bind
+
+cat <<EOF > /etc/net/ifaces/enp7s1/resolv.conf
+  search au.team
+  nameserver 192.168.11.66
+EOF
+
+systemctl restart network
+systemctl restart bind
+
+SRV1-DT:
+echo "nameserver 77.88.8.8" > /etc/resolv.conf
+
+apt-get update && apt-get install -y bind bind-utils
+
+vim /etc/bind/options.conf
+listen-on { 127.0.0.1; 192.168.33.66; };
+listen-on-v6 { none; };
+
+forwarders { 77.88.8.8; };
+
+allow-query { 192.168.33.0/24; 192.168.11.0/24; };
+allow-transfer { none; };
+
+control bind-slave enabled
+
+cat <<EOF > /etc/net/ifaces/ens19/resolv.conf
+  search au.team
+  nameserver 192.168.33.66
+  nameserver 192.168.11.66
+EOF
+
+systemctl restart network
+
+systemctl enable --now bind
+
+
+SRV2-DT | SRV3-DT | ADMIN-DT:
+cat <<EOF > /etc/net/ifaces/ens19/resolv.conf
+  search au.team
+  nameserver 192.168.33.66
+  nameserver 192.168.11.66
+EOF
+
+systemctl restart network
+
+
+SW1-HQ | SW2-HQ | SW3-HQ:
+cat <<EOF > /etc/net/ifaces/MGMT/resolv.conf
+  search au.team
+  nameserver 192.168.11.66
+  nameserver 192.168.33.66
+EOF
+
+systemctl restart network
+
+
+ADMIN-HQ:
+cat <<EOF > /etc/net/ifaces/ens19/resolv.conf
+  search au.team
+  nameserver 192.168.11.66
+  nameserver 192.168.33.66
+EOF
+
+systemctl restart network

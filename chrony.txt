@@ -1,0 +1,21 @@
+SRV1-HQ:
+vim /etc/chrony.conf
+server ntp2.vniiftri.ru iburst prefer
+local stratum 5
+allow 192.168.11.0/24
+allow 192.168.33.0/24
+allow 10.10.10.0/30
+
+systemctl restart chronyd
+
+chronyc sources
+
+chronyc tracking
+
+SW1-HQ | SW2-HQ | SW3-HQ | SRV1-DT | SRV2-DT | SRV3-DT:
+vim /etc/chrony.conf
+server 192.168.11.66 iburst prefer
+
+systemctl restart chronyd
+
+chronyc clients
