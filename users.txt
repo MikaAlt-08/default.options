@@ -1,0 +1,31 @@
+SRV1-DT | SRV2-DT | SRV3-DT | SW1-HQ | SW2-HQ | SW3-HQ | SRV1-HQ:
+useradd admuser -m -U -s /bin/bash
+
+grep admuser /etc/passwd
+
+passwd sshuser
+As121213
+
+usermod -aG wheel admuser
+
+echo "admuser ALL=(ALL:ALL) NOPASSWD: ALL" >> /etc/sudoers
+
+sudo -i
+
+
+CLI | ADMIN:
+apt-get update && apt-get install -y sudo
+
+echo "sshuser ALL=(ALL:ALL) NOPASSWD: ALL" >> /etc/sudoers
+
+sudo -i
+
+
+R-DT | R-HQ:
+enable
+conf
+username admuser
+password As121213
+role admin
+exit
+write
