@@ -1,0 +1,53 @@
+ADMIN-HQ | ADMIN-DT | CLI-HQ | CLI-DT:
+apt-get update && apt-get install -y gpupdate
+
+gpupdate-setup enable
+
+ADMIN-HQ:
+apt-get update && apt-get install -y admc
+
+kinit administrator@AU.TEAM
+
+apt-get install -y gpui
+
+admc>
+group policy objects>
+cli>
+create policy and connect to OU>
+name: desktop
+edit>
+1,2,3,4>
+Settings Mate>
+Backround desktop>
+image backround desktop>
+file: smb://srv1-hq.au.team/samba/image.png
+block: yes
+
+system ALT>
+Rules Polkit>
+NetworkManager>
+enable
+No
+Block: yes
+
+CLI-DT{HQ}:
+reboot
+
+
+admc>
+group policy objects>
+admin>
+create policy and connect to OU>
+name: connect shared folder
+edit>
+system settings>
+network disks>
+action: update
+way: smb://srv1-hq/samba
+reconnect: yes name: samba
+name disk
+use j:
+show disk show all disks
+
+ADMIN-DT{HQ}:
+reboot
