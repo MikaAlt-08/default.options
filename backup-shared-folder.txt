@@ -1,0 +1,35 @@
+SRV1-HQ:
+mkdir /var/bac/
+
+vim /etc/systemd/system/backup.service
+[Unit]
+Description=Backup opt/data
+[Service] 
+Type=oneshot
+ExecStart=/bin/tar -czf "/var/bac/SAMBA.tar.gz" /opt/data
+[Install]
+WantedBy=multi-user.target
+
+systemctl daemon-reload
+
+systemctl enable --now backup.service
+
+systemctl status backup.service
+Active: inactive
+
+vim /etc/systemd/system/backup.timer
+[Unit]
+Description=Backup /opt/data share folder Timer
+[Timer]
+OnCalendar=*-*-* 18:00:00
+Persistent=true
+Unit=backup.service
+[Install]
+WantedBy=timers.target
+
+systemctl daemon-reload
+
+systemctl enable --now backup.timer
+
+systemctl status backup.timer
+Active: active
