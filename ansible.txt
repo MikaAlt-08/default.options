@@ -1,0 +1,58 @@
+ADMIN-DT:
+apt-get update && apt-get install -y ansible sshpass
+
+chown -R root:user /etc/ansible
+
+chmod -R 774 /etc/ansible
+
+cd /etc/ansible
+pwd
+/etc/ansible
+ls
+ansible.cfg hosts
+
+vim inventory
+all:
+children:
+  Networking:
+    hosts:
+     R-DT:
+     R-HQ:
+
+  Servers:
+    hosts:
+     SRV1-HQ:
+     SRV1-DT:
+     SRV2-DT:
+     SRV3-DT:
+
+  Clients:
+    hosts:
+     ADMIN-HQ:
+     ADMIN-DT:
+     CLI-HQ:
+     CLI-DT:
+
+vim ansible.cfg
+inventory = /etc/ansible/inventory
+host_key_checking = False
+
+cd /etc/ansible
+
+mkdir group_vars
+
+ls group_vars/
+all.yml Networking.yml
+
+cat group_vars/Networking.yml
+---
+ansible_connection: network_cli
+ansible_network_os: ios
+
+cat group_vars/all.yml
+---
+ansible_ssh_user: admuser
+ansible_ssh_pass: As121213
+ansible_python_interpreter /usr/bin/python3
+
+ansible -m ping all 
